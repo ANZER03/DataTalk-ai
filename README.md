@@ -23,27 +23,30 @@ DataTalk-ai is an AI-powered application designed to assist data experts in mani
 
 DataTalk-ai streamlines data operations through the following key functionalities:
 
-1.  **Data Connection:**
-    *   Users can easily connect to various data sources, including SQLite, MySQL, and SQL Server databases.
-    *   The application also supports uploading and processing CSV and Excel files.
+1.  **Data Connection (Streamlit & `core/connection.py`):**
+    *   The application leverages Streamlit widgets to enable users to easily connect to various data sources, including SQLite, MySQL, and SQL Server databases via SQLAlchemy and `mysql.connector`/`pyodbc`.
+    *   It also supports uploading and processing CSV and Excel files, which are loaded into Pandas DataFrames and then registered as in-memory tables in DuckDB for SQL-like querying.
 
-2.  **LLM Interaction:**
-    *   The core intelligence of DataTalk-ai is powered by the Google Generative AI (Gemini) model.
-    *   It interprets user prompts in natural language to generate appropriate SQL queries for database interactions or Python code for data manipulation and visualization.
+2.  **LLM Interaction (Google Gemini & `core/llm.py`):**
+    *   The core intelligence of DataTalk-ai is powered by the Google Generative AI (Gemini) model, integrated through the `google.generativeai` library.
+    *   It interprets user prompts in natural language to generate appropriate SQL queries (for databases or DuckDB for files) or Python code for data manipulation and visualization.
+    *   LangChain's `SQLDatabase` utility is used to represent the database schema to the LLM.
 
-3.  **SQL Querying:**
+3.  **SQL Querying & Execution (`core/execution.py`):**
     *   For connected databases or loaded files (which are processed in-memory using DuckDB), users can pose natural language questions.
-    *   The LLM translates these questions into syntactically correct SQL queries, executes them, and displays the results in a tabular format.
+    *   The LLM translates these questions into syntactically correct SQL queries, which are then executed using Pandas' `read_sql_query` (for databases) or DuckDB's `execute` method (for files).
+    *   Results are displayed in a tabular format.
 
-4.  **Data Manipulation (Pandas):**
+4.  **Data Manipulation (Pandas & `core/execution.py`):**
     *   Data experts can issue natural language commands to perform various data cleaning, transformation, and analysis tasks on their DataFrames.
-    *   The LLM generates the corresponding Python (Pandas) code, executes it, and presents the modified DataFrame to the user.
+    *   The LLM generates the corresponding Python (Pandas) code, which is executed using Python's `exec()` function in a controlled local namespace.
+    *   The modified DataFrame is then presented to the user.
 
-5.  **Data Visualization (Plotly):**
+5.  **Data Visualization (Plotly & `core/visualization.py`):**
     *   The application enables users to request a wide range of interactive data visualizations.
-    *   The LLM generates Plotly code to create insightful charts based on the user's requirements and the current state of the data.
+    *   The LLM generates Plotly code, which is executed to create insightful charts based on the user's requirements and the current state of the data.
 
-6.  **Dashboard Creation:**
+6.  **Dashboard Creation (`core/visualization.py`):**
     *   Beyond individual visualizations, DataTalk-ai offers the capability to generate comprehensive HTML dashboards.
     *   These dashboards seamlessly integrate multiple Plotly figures, providing a holistic view of the data insights.
 
@@ -114,6 +117,16 @@ Once the application is running, you can start interacting with your data. Here'
     *   **Natural Language Queries:** Type your questions or commands in natural language (e.g., "Show me the top 10 customers by sales," "Clean the 'price' column by removing null values," "Create a bar chart of product categories").
     *   **Code Generation:** The AI will generate and execute the appropriate SQL or Python (Pandas/Plotly) code based on your input.
     *   **View Results:** The results (tables, modified DataFrames, or charts) will be displayed in the main area.
+
+    **Special Commands:**
+    *   `+ [natural language query]`: Use this prefix for data manipulation (SQL queries for databases, or DataFrame manipulation for loaded files).
+    *   `- [natural language plot request]`: Use this prefix to generate Plotly visualizations from your current DataFrame.
+    *   `* [natural language code request]`: Use this prefix to generate and execute general Python code.
+    *   `/editor`: Opens a code editor to manually modify and execute generated SQL or Python code.
+    *   `/NB [notebook_name]`: Exports the current chat history's generated code into a Jupyter Notebook (.ipynb) file.
+    *   `/dash`: Initiates the dashboard creation process, allowing you to select plots to include.
+    *   `/replace [table_name]`: Replaces an existing in-memory DuckDB table with the current DataFrame (useful after manipulations).
+    *   `/backup`: Reverts the DataFrame to its state before the last data manipulation.
 
 3.  **Create Dashboards:**
     *   You can request the AI to create a dashboard by asking something like, "Create a dashboard showing sales trends and customer demographics."
