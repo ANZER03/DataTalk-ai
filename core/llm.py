@@ -1,11 +1,10 @@
 import json
 import os
-import google.generativeai as genai
+from openai import OpenAI
 from core.utils import *
 from core.execution import *
 from core.visualization import *
 import streamlit as st
-import google.generativeai as genai
 import pandas as pd
 
 # Load environment variables from a .env file if available
@@ -15,13 +14,19 @@ try:
 except Exception:
     pass
 
+# Initialize OpenAI client with Gemini compatibility
+client = OpenAI(
+    api_key=os.getenv('GOOGLE_API_KEY'),
+    base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
+)
 
-genai.configure(api_key=os.getenv('GOOGLE_API_KEY'))
-# model = genai.GenerativeModel('gemini-1.5-pro-exp-0801')
-model = genai.GenerativeModel('gemini-2.0-flash')
-# model = genai.GenerativeModel('gemini-1.5-pro-002')
-# model = genai.GenerativeModel('gemini-1.5-flash-002')
-# model = genai.GenerativeModel('gemini-1.5-flash-exp-0827')
+def create_chat_completion(messages, model="gemini-2.0-flash"):
+    """Helper function to create chat completions with the OpenAI client."""
+    response = client.chat.completions.create(
+        model=model,
+        messages=messages
+    )
+    return response.choices[0].message.content
 
 
 def handle_sql_query(prompt):
@@ -99,10 +104,36 @@ def handle_sql_query(prompt):
     else:
         st.chat_message("user").write(f"SQL / {prompt.strip()}")
 
+    # Initialize chat history if not exists
+    if 'chat_history' not in st.session_state:
+        st.session_state.chat_history = [
+            {"role": "system", "content": "You are a SQL expert assistant."}
+        ]
+    
     if len(st.session_state.messages) <= 2:
-        sql = st.session_state.chat.send_message(prompt_template).text
+        # First message - use full template
+        messages = st.session_state.chat_history + [
+            {"role": "user", "content": prompt_template}
+        ]
+        sql = create_chat_completion(messages)
+        
+        # Update chat history
+        st.session_state.chat_history.extend([
+            {"role": "user", "content": prompt_template},
+            {"role": "assistant", "content": sql}
+        ])
     else:
-        sql = st.session_state.chat.send_message(prompt_template_2).text
+        # Continue existing conversation
+        messages = st.session_state.chat_history + [
+            {"role": "user", "content": prompt_template_2}
+        ]
+        sql = create_chat_completion(messages)
+        
+        # Update chat history
+        st.session_state.chat_history.extend([
+            {"role": "user", "content": prompt_template_2},
+            {"role": "assistant", "content": sql}
+        ])
     sql_ai = sql
     query = extract_sql(sql)
     try:
@@ -197,12 +228,46 @@ def handle_Files_query(prompt):
     else:
         st.chat_message("user").write(f"SQL / {prompt.strip()}")
 
+    # Initialize chat history if not exists
+    if 'files_chat_history' not in st.session_state:
+        st.session_state.files_chat_history = [
+            {"role": "system", "content": "You are a SQL expert assistant for DuckDB queries."}
+        ]
+    
     if len(st.session_state.messages) <= 2:
-        sql = st.session_state.chat.send_message(prompt_template).text
-    if not st.session_state.schema_changed:
-        sql = st.session_state.chat.send_message(prompt_template_2).text
+        # First message - use full template
+        messages = st.session_state.files_chat_history + [
+            {"role": "user", "content": prompt_template}
+        ]
+        sql = create_chat_completion(messages)
+        
+        # Update chat history
+        st.session_state.files_chat_history.extend([
+            {"role": "user", "content": prompt_template},
+            {"role": "assistant", "content": sql}
+        ])
+    elif not st.session_state.schema_changed:
+        messages = st.session_state.files_chat_history + [
+            {"role": "user", "content": prompt_template_2}
+        ]
+        sql = create_chat_completion(messages)
+        
+        # Update chat history
+        st.session_state.files_chat_history.extend([
+            {"role": "user", "content": prompt_template_2},
+            {"role": "assistant", "content": sql}
+        ])
     else:
-        sql = st.session_state.chat.send_message(prompt_template_3).text
+        messages = st.session_state.files_chat_history + [
+            {"role": "user", "content": prompt_template_3}
+        ]
+        sql = create_chat_completion(messages)
+        
+        # Update chat history
+        st.session_state.files_chat_history.extend([
+            {"role": "user", "content": prompt_template_3},
+            {"role": "assistant", "content": sql}
+        ])
         st.session_state.schema_changed = False
 
     query = extract_sql(sql)
@@ -343,8 +408,24 @@ def handle_dataframe_manipulation(prompt):
     else:
         st.chat_message("user").write(f"DataFrame / {prompt.strip()}")
 
+    # Initialize chat history if not exists
+    if 'df_chat_history' not in st.session_state:
+        st.session_state.df_chat_history = [
+            {"role": "system", "content": "You are a data manipulation assistant that generates Python pandas code."}
+        ]
+    
     if len(st.session_state.messages) <= 2:
-        code = st.session_state.chat.send_message(prompt_template).text
+        # First message - use full template
+        messages = st.session_state.df_chat_history + [
+            {"role": "user", "content": prompt_template}
+        ]
+        code = create_chat_completion(messages)
+        
+        # Update chat history
+        st.session_state.df_chat_history.extend([
+            {"role": "user", "content": prompt_template},
+            {"role": "assistant", "content": code}
+        ])
     elif not st.session_state.DataFrame.empty:  # Check if DataFrame is not empty
         prompt_template_2 = f"""
         <result_df_info>
@@ -357,7 +438,16 @@ def handle_dataframe_manipulation(prompt):
 
         Python Code:
         """
-        code = st.session_state.chat.send_message(prompt_template_2).text
+        messages = st.session_state.df_chat_history + [
+            {"role": "user", "content": prompt_template_2}
+        ]
+        code = create_chat_completion(messages)
+        
+        # Update chat history
+        st.session_state.df_chat_history.extend([
+            {"role": "user", "content": prompt_template_2},
+            {"role": "assistant", "content": code}
+        ])
     # else:
     #     code = st.session_state.chat.send_message(prompt_template_2).text
 
@@ -470,11 +560,37 @@ def handle_general_code_execution(prompt):
         {"role": "user", "type": "text", "content": prompt})
     st.chat_message("user").write(f"Code / {prompt[1:].strip()}")
 
+    # Initialize chat history if not exists
+    if 'code_chat_history' not in st.session_state:
+        st.session_state.code_chat_history = [
+            {"role": "system", "content": "You are a Python code generation assistant for data analysis."}
+        ]
+    
     if not st.session_state.excute_first_code_prompt:
-        code = st.session_state.chat_code.send_message(prompt_template).text
+        # First message - use full template
+        messages = st.session_state.code_chat_history + [
+            {"role": "user", "content": prompt_template}
+        ]
+        code = create_chat_completion(messages)
+        
+        # Update chat history
+        st.session_state.code_chat_history.extend([
+            {"role": "user", "content": prompt_template},
+            {"role": "assistant", "content": code}
+        ])
         st.session_state.excute_first_code_prompt = True
     else:
-        code = st.session_state.chat_code.send_message(prompt_template_2).text
+        # Continue existing conversation
+        messages = st.session_state.code_chat_history + [
+            {"role": "user", "content": prompt_template_2}
+        ]
+        code = create_chat_completion(messages)
+        
+        # Update chat history
+        st.session_state.code_chat_history.extend([
+            {"role": "user", "content": prompt_template_2},
+            {"role": "assistant", "content": code}
+        ])
 
     python_code = extract_code_without_blocks(code)
 
@@ -613,22 +729,47 @@ def handle_plotly_visualization(prompt: str):
 
             Here is the Python code :
             """
+            # Initialize chat history if not exists
+            if 'plot_chat_history' not in st.session_state:
+                st.session_state.plot_chat_history = [
+                    {"role": "system", "content": "You are a Plotly visualization expert that generates interactive plots."}
+                ]
+            
             if st.session_state.df_is_changed == True:
-                st.session_state.history_plot = []
-                st.session_state.chat_plot = model.start_chat(
-                    history=st.session_state.history_plot)
-                res = st.session_state.chat_plot.send_message(
-                    prompt_template_plotly)
+                # Reset chat history for new dataframe but keep system message
+                st.session_state.plot_chat_history = [
+                    {"role": "system", "content": "You are a Plotly visualization expert that generates interactive plots."}
+                ]
+                
+                messages = st.session_state.plot_chat_history + [
+                    {"role": "user", "content": prompt_template_plotly}
+                ]
+                res_text = create_chat_completion(messages)
+                
+                # Update chat history
+                st.session_state.plot_chat_history.extend([
+                    {"role": "user", "content": prompt_template_plotly},
+                    {"role": "assistant", "content": res_text}
+                ])
                 st.session_state.df_is_changed = False
             else:
-                res = st.session_state.chat_plot.send_message(
-                    prompt_template_2)
+                # Continue existing conversation
+                messages = st.session_state.plot_chat_history + [
+                    {"role": "user", "content": prompt_template_2}
+                ]
+                res_text = create_chat_completion(messages)
+                
+                # Update chat history
+                st.session_state.plot_chat_history.extend([
+                    {"role": "user", "content": prompt_template_2},
+                    {"role": "assistant", "content": res_text}
+                ])
 
-            code_python = extract_code_without_blocks(res.text)
+            code_python = extract_code_without_blocks(res_text)
 
             external_data = {"df": st.session_state.DataFrame}
             st.session_state.fig, st.session_state.error = generate_fig(
-                res.text, external_data)
+                res_text, external_data)
 
             st.session_state.messages.append(
                 {"role": "user", "type": "text", "content": prompt})
@@ -669,7 +810,7 @@ def handle_plotly_visualization(prompt: str):
             
         except Exception as e:
             st.warning(e)
-            print(res.text)
+            print(res_text)
     else:
         st.warning("Please Run SQL or PYTHON query result first")
 
