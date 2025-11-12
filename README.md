@@ -1,13 +1,7 @@
 # DataTalk-ai 📊✨
 
-<!-- Banner gallery: 2-column grid with the third image centered across both columns -->
-<div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; align-items:center;">
-    <img src="static/image1.png" alt="DataTalk-ai Banner 1" style="width:100%; height:auto; object-fit:contain; border-radius:6px;" />
-    <img src="static/image2.png" alt="DataTalk-ai Banner 2" style="width:100%; height:auto; object-fit:contain; border-radius:6px;" />
-    <div style="grid-column: 1 / -1; display:flex; justify-content:center;">
-        <img src="static/image3.png" alt="DataTalk-ai Banner 3" style="max-width:60%; height:auto; object-fit:contain; border-radius:6px;" />
-    </div>
-</div>
+<!-- Banner gallery: use image files from the static folder -->
+![DataTalk-ai Banner 1](static/image1.png)
 
 **Your AI-Powered Data Companion for Seamless Data Manipulation, Analysis, and Dashboarding.**
 
