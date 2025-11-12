@@ -1,11 +1,15 @@
 # DataTalk-ai 📊✨
 
-![DataTalk-ai Banner](static/chart.png)
+<!-- Banner gallery: 2-column grid with the third image centered across both columns -->
+<div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; align-items:center;">
+    <img src="static/image1.png" alt="DataTalk-ai Banner 1" style="width:100%; height:auto; object-fit:contain; border-radius:6px;" />
+    <img src="static/image2.png" alt="DataTalk-ai Banner 2" style="width:100%; height:auto; object-fit:contain; border-radius:6px;" />
+    <div style="grid-column: 1 / -1; display:flex; justify-content:center;">
+        <img src="static/image3.png" alt="DataTalk-ai Banner 3" style="max-width:60%; height:auto; object-fit:contain; border-radius:6px;" />
+    </div>
+</div>
 
 **Your AI-Powered Data Companion for Seamless Data Manipulation, Analysis, and Dashboarding.**
-
-[![GitHub license](https://img.shields.io/github/license/your-username/DataTalk-ai.svg)](https://github.com/your-username/DataTalk-ai/blob/main/LICENSE)
-[![GitHub stars](https://img.shields.io/github/stars/your-username/DataTalk-ai.svg?style=social)](https://github.com/your-username/DataTalk-ai)
 
 DataTalk-ai is an AI-powered application designed to assist data experts in manipulating and analyzing data using Large Language Models (LLMs). It provides an intuitive interface, built with Streamlit, to connect to various data sources (SQL databases, CSV, Excel files) and interact with the data through natural language queries and Python code generation.
 
@@ -149,16 +153,6 @@ The project is organized into the following main directories:
     -   `query_interface.py`: Streamlit components for the chat and data display.
 -   `requirements.txt`: Lists all Python dependencies.
 -   `README.md`: This project documentation file.
-
-## Contributing 👋
-
-We welcome contributions to DataTalk-ai! If you'd like to contribute, please follow these guidelines:
-
-1.  **Fork the repository.**
-2.  **Create a new branch** for your feature or bug fix.
-3.  **Make your changes** and ensure they adhere to the project's coding style.
-4.  **Write clear commit messages.**
-5.  **Submit a pull request** with a detailed description of your changes.
 
 ## License 📄
 
